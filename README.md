@@ -1,4 +1,4 @@
-# Gene Family Identification Pipeline
+# The xyLEM Gene Family Pipeline
 
 A **Nextflow DSL2** pipeline for genome-wide identification of plant gene family
 members using a multi-evidence approach.
