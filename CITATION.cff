@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+title: xyLEM
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Sanam
+    family-names: Parajuli
+    email: sanam.parajuli@sdstate.edu
+repository-code: 'https://github.com/sanamparajuli/xyLEM'
+keywords:
+  - xyLEM
+  - gene family
+license: OSL-2.1
+version: 4.1.8
+date-released: '2026-05-01'
