@@ -207,6 +207,6 @@ print(f"Orthology: {type_counts['RBH_ORTHOLOG']} RBH, "
       f"{type_counts['PUTATIVE_HOMOLOG']} putative, "
       f"{type_counts['NO_BLAST_HIT']} no-hit -- all {len(all_ids)} proceed",
       file=sys.stderr)
-    PYEOF
+PYEOF
     """
 }
