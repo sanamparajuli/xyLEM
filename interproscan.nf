@@ -18,8 +18,9 @@ process INTERPROSCAN {
     def db_flag = params.interpro_db ? "--data-dir ${params.interpro_db}" : ""
     """
     sed 's/[*]//g' ${candidates_fasta} > candidates_clean.fasta
+    IPS_BIN="${params.interproscan_bin ?: 'interproscan.sh'}"
 
-    interproscan.sh \\
+    ${IPS_BIN} \\
         --input        candidates_clean.fasta \\
         --output-dir   . \\
         --formats      TSV,XML,GFF3 \\
