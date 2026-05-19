@@ -17,7 +17,6 @@ process INTERPROSCAN {
     script:
     def db_flag = params.interpro_db ? "--data-dir ${params.interpro_db}" : ""
     """
-    # FIX: straight ASCII single quotes; [*] avoids any quote ambiguity
     sed 's/[*]//g' ${candidates_fasta} > candidates_clean.fasta
 
     interproscan.sh \\
@@ -57,16 +56,18 @@ process CONFIRM_CANDIDATES {
     path "domain_confirmation_summary.tsv", emit: summary
 
     script:
-    // FIX: python3 << 'PYEOF' heredoc replaces #!/usr/bin/env python3 shebang
-    //      inside a Nextflow """ block (shebang is ignored; script runs as bash).
     """
     python3 << 'PYEOF'
+iprscan_tsv    = '${iprscan_tsv}'
+hmmer_ids_file = '${hmmer_ids}'
+target_domains = '${target_domains}'
+
 import sys
 from collections import defaultdict
 
-target_set = set(d.strip() for d in "${target_domains}".split(",") if d.strip())
+target_set = set(d.strip() for d in target_domains.split(",") if d.strip())
 
-with open("${hmmer_ids}") as fh:
+with open(hmmer_ids_file) as fh:
     hmmer_ids = set(line.strip() for line in fh if line.strip())
 
 # InterProScan TSV columns:
@@ -75,9 +76,9 @@ with open("${hmmer_ids}") as fh:
 # 11:ipr_acc 12:ipr_desc 13:go_terms 14:pathways
 
 seq_domains = defaultdict(set)
-with open("${iprscan_tsv}") as fh:
+with open(iprscan_tsv) as fh:
     for line in fh:
-        cols = line.rstrip("\\n").split("\\t")
+        cols = line.rstrip("\n").split("\t")
         if len(cols) < 5:
             continue
         seq_id   = cols[0]
@@ -100,16 +101,15 @@ for sid in sorted(hmmer_ids):
     rows.append((sid, ";".join(sorted(found)) or "none", status))
 
 with open("confirmed_ids.txt", "w") as out:
-    # FIX: \\n so Groovy passes \n to Python (newline escape sequence)
-    out.write("\\n".join(confirmed) + ("\\n" if confirmed else ""))
+    out.write("\n".join(confirmed) + ("\n" if confirmed else ""))
 
 with open("rejected_ids.txt", "w") as out:
-    out.write("\\n".join(rejected) + ("\\n" if rejected else ""))
+    out.write("\n".join(rejected) + ("\n" if rejected else ""))
 
 with open("domain_confirmation_summary.tsv", "w") as out:
-    out.write("seq_id\\tmatched_domains\\tstatus\\n")
+    out.write("seq_id\tmatched_domains\tstatus\n")
     for r in rows:
-        out.write("\\t".join(r) + "\\n")
+        out.write("\t".join(r) + "\n")
 
 print(f"InterProScan: {len(confirmed)} confirmed, {len(rejected)} rejected",
       file=sys.stderr)
