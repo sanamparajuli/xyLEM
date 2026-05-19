@@ -45,7 +45,7 @@ Proteome (FASTA)
 
 | Tool          | Version tested | Install via               |
 |---------------|---------------|---------------------------|
-| Nextflow      | ≥ 23.04       | `curl -s get.nextflow.io` |
+| Nextflow      | 25.04.2       | `curl -s get.nextflow.io` |
 | HMMER         | 3.4           | bioconda                  |
 | InterProScan  | 5.59_91.0     | bioconda                  |
 | BLAST+        | 2.17.0        | bioconda                  |
