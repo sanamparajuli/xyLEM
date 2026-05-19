@@ -94,10 +94,16 @@ with open("${domtblout}") as fh:
 
 # ── Step 2: isoform deduplication ────────────────────────────────
 def get_gene_id(seq_id):
-    m = re.match(r'^(.+?)(\\.\\d+)+\$', seq_id)
+    # g25347.t1, g25347.t2 -> g25347
+    m = re.match(r'^(.+)\\.[a-zA-Z]+\\d+$', seq_id)
     if m:
         return m.group(1)
-    m = re.match(r'^(.+?)-\\d+\$', seq_id)
+    # gene.1, gene.2 -> gene
+    m = re.match(r'^(.+)\\.\\d+$', seq_id)
+    if m:
+        return m.group(1)
+    # gene-1, gene-2 -> gene
+    m = re.match(r'^(.+)-\\d+$', seq_id)
     if m:
         return m.group(1)
     return seq_id
