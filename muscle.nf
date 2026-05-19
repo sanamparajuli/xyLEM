@@ -107,6 +107,6 @@ if result.returncode != 0:
     sys.exit(result.returncode)
 
 print("Alignment complete: combined_aligned.fasta", file=sys.stderr)
-    PYEOF
+PYEOF
     """
 }
