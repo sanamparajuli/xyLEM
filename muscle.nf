@@ -74,24 +74,24 @@ print(f"Total for alignment: {len(merged)} "
       f"{len(outgroup)} outgroup)", file=sys.stderr)
 
 with open("sequence_manifest.tsv", "w") as out:
-    out.write("seq_id\tsource\tis_outgroup\n")
+    out.write("seq_id\\tsource\\tis_outgroup\\n")
     for sid in merged:
         is_og = "true" if source[sid] == "outgroup" else "false"
-        out.write(f"{sid}\t{source[sid]}\t{is_og}\n")
+        out.write(f"{sid}\\t{source[sid]}\\t{is_og}\\n")
 
 with open("combined_dedup.fasta", "w") as out:
     for sid, seq in merged.items():
-        out.write(f">{sid}\n{seq}\n")
+        out.write(f">{sid}\\n{seq}\\n")
 
 seq_count = len(merged)
 algo_flag = "-super5" if seq_count > 1000 else "-align"
 
 with open("muscle.log", "w") as log:
-    log.write(f"Input sequences : {seq_count}\n")
-    log.write(f"  Candidates    : {len(candidates)}\n")
-    log.write(f"  References    : {len(references)}\n")
-    log.write(f"  Outgroup      : {len(outgroup)}\n")
-    log.write(f"Algorithm       : {algo_flag}\n\n")
+    log.write(f"Input sequences : {seq_count}\\n")
+    log.write(f"  Candidates    : {len(candidates)}\\n")
+    log.write(f"  References    : {len(references)}\\n")
+    log.write(f"  Outgroup      : {len(outgroup)}\\n")
+    log.write(f"Algorithm       : {algo_flag}\\n\\n")
 
 cmd = ["muscle", algo_flag, "combined_dedup.fasta",
        "-output", "combined_aligned.fasta",
