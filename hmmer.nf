@@ -7,8 +7,8 @@ process HMMER_SEARCH {
     publishDir "${params.outdir}/01_hmmer", mode: 'copy'
 
     input:
-    path proteome      // Target plant proteome (FASTA)
-    path hmm_profiles  // HMM profile file(s) – collected into one dir
+    path proteome
+    path hmm_profiles
 
     output:
     path "hmmer_results.domtblout", emit: domtblout
@@ -17,17 +17,14 @@ process HMMER_SEARCH {
 
     script:
     """
-    # If multiple profiles supplied, press and concatenate them
     if [ \$(ls *.hmm 2>/dev/null | wc -l) -gt 1 ]; then
         cat *.hmm > combined_profiles.hmm
     else
         cp *.hmm combined_profiles.hmm
     fi
 
-    # Press the HMM database for faster searching
     hmmpress combined_profiles.hmm
 
-    # Run hmmsearch
     hmmsearch \\
         --cpu        ${task.cpus} \\
         -E           ${params.hmmer_evalue} \\
@@ -49,23 +46,23 @@ process FILTER_HMMER {
     path domtblout
 
     output:
-    path "candidate_ids.txt",         emit: candidate_ids
-    path "hmmer_filtered.tsv",        emit: filtered_table
-    path "hmmer_filter_summary.txt",  emit: summary
+    path "candidate_ids.txt",        emit: candidate_ids
+    path "hmmer_filtered.tsv",       emit: filtered_table
+    path "hmmer_filter_summary.txt", emit: summary
 
     script:
-    // FIX: python3 << 'PYEOF' replaces #!/usr/bin/env python3 inside """ block
     """
     python3 << 'PYEOF'
+domtblout       = '${domtblout}'
+evalue_thresh   = float('${params.hmmer_evalue}')
+coverage_thresh = float('${params.hmmer_coverage}')
+
 import sys
 import re
 
-evalue_thresh   = float("${params.hmmer_evalue}")
-coverage_thresh = float("${params.hmmer_coverage}")
-
 # ── Step 1: parse all hits passing E-value + coverage thresholds ──
 all_hits = []
-with open("${domtblout}") as fh:
+with open(domtblout) as fh:
     for line in fh:
         if line.startswith('#'):
             continue
@@ -84,26 +81,26 @@ with open("${domtblout}") as fh:
 
         if seq_evalue <= evalue_thresh and hmm_coverage >= coverage_thresh:
             all_hits.append({
-                'seq_id':    seq_id,
-                'hmm_name':  hmm_name,
+                'seq_id':     seq_id,
+                'hmm_name':   hmm_name,
                 'seq_evalue': seq_evalue,
                 'dom_evalue': dom_evalue,
-                'bitscore':  bitscore,
-                'coverage':  hmm_coverage,
+                'bitscore':   bitscore,
+                'coverage':   hmm_coverage,
             })
 
 # ── Step 2: isoform deduplication ────────────────────────────────
 ISOFORM_PATTERNS = [
-    (r'^(.+)\\.[tmMpP]\\d+\$',      'MAKER/Augustus: g25347.t1, gene.m1'),
-    (r'^(.+)_[TtPpCc]\\d+\$',       'Maize: GRMZM2G000230_T01, Zm00001_t001'),
-    (r'^(.+)\\.[a-zA-Z]+\\d+\$',    'Letter+digit: gene.CDS1, VIT_00s.t01'),
-    (r'^(.+)\\.\\d+\$',             'Numeric: AT1G01010.1, Os01g.1, XP_123.1'),
-    (r'^(.+)-\\d+\$',               'Hyphen: gene-001'),
+    r'^(.+)\.[tmMpP]\d+$',      # MAKER/Augustus: g25347.t1, gene.m1
+    r'^(.+)_[TtPpCc]\d+$',      # Maize: GRMZM2G000230_T01, Zm00001_t001
+    r'^(.+)\.[a-zA-Z]+\d+$',    # Letter+digit: gene.CDS1, VIT_00s.t01
+    r'^(.+)\.\d+$',             # Numeric: AT1G01010.1, Os01g.1, XP_123.1
+    r'^(.+)-\d+$',              # Hyphen: gene-001
 ]
 
 def get_gene_id(seq_id):
     clean = re.sub(r'^(?:transcript|gene|protein|mRNA|CDS):', '', seq_id)
-    for pattern, _ in ISOFORM_PATTERNS:
+    for pattern in ISOFORM_PATTERNS:
         m = re.match(pattern, clean)
         if m:
             return m.group(1)
@@ -130,15 +127,15 @@ candidates = {hit['seq_id']: hit for hit in gene_best.values()}
 
 with open("candidate_ids.txt", "w") as out:
     for sid in sorted(candidates):
-        out.write(sid + "\\n")
+        out.write(sid + "\n")
 
 with open("hmmer_filtered.tsv", "w") as out:
-    out.write("seq_id\\tgene_id\\thmm_name\\tseq_evalue\\tdom_evalue\\tbitscore\\thmm_coverage\\n")
+    out.write("seq_id\tgene_id\thmm_name\tseq_evalue\tdom_evalue\tbitscore\thmm_coverage\n")
     for gene_id, hit in sorted(gene_best.items()):
         out.write(
-            f"{hit['seq_id']}\\t{gene_id}\\t{hit['hmm_name']}\\t"
-            f"{hit['seq_evalue']:.2e}\\t{hit['dom_evalue']:.2e}\\t"
-            f"{hit['bitscore']:.1f}\\t{hit['coverage']:.3f}\\n"
+            f"{hit['seq_id']}\t{gene_id}\t{hit['hmm_name']}\t"
+            f"{hit['seq_evalue']:.2e}\t{hit['dom_evalue']:.2e}\t"
+            f"{hit['bitscore']:.1f}\t{hit['coverage']:.3f}\n"
         )
 
 n_before  = len(all_hits)
@@ -146,15 +143,15 @@ n_after   = len(candidates)
 n_removed = n_before - n_after
 
 with open("hmmer_filter_summary.txt", "w") as out:
-    out.write("HMMER Filter + Isoform Deduplication Summary\\n")
-    out.write("=============================================\\n")
-    out.write(f"E-value threshold          : {evalue_thresh}\\n")
-    out.write(f"Coverage threshold         : {coverage_thresh}\\n")
-    out.write(f"Raw hits passing filters   : {n_before}\\n")
-    out.write(f"Isoforms removed           : {n_removed}\\n")
-    out.write(f"Unique genes retained      : {n_after}\\n")
-    out.write("\\nSelection rule: best bitscore per gene ID;\\n")
-    out.write("tie-break: lowest e-value, then highest HMM coverage.\\n")
+    out.write("HMMER Filter + Isoform Deduplication Summary\n")
+    out.write("=============================================\n")
+    out.write(f"E-value threshold          : {evalue_thresh}\n")
+    out.write(f"Coverage threshold         : {coverage_thresh}\n")
+    out.write(f"Raw hits passing filters   : {n_before}\n")
+    out.write(f"Isoforms removed           : {n_removed}\n")
+    out.write(f"Unique genes retained      : {n_after}\n")
+    out.write("\nSelection rule: best bitscore per gene ID;\n")
+    out.write("tie-break: lowest e-value, then highest HMM coverage.\n")
 
 print(f"HMMER: {n_before} hits -> {n_after} unique genes "
       f"({n_removed} isoforms removed)", file=sys.stderr)
