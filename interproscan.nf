@@ -31,7 +31,6 @@ process INTERPROSCAN {
         ${db_flag} \\
         --outfile-base interproscan_results
 
-    # Normalize output filenames (IPS naming varies by version)
     for ext in tsv xml gff3; do
         if ! [ -f "interproscan_results.\${ext}" ]; then
             mv interproscan_results*."\${ext}" "interproscan_results.\${ext}" 2>/dev/null || true
@@ -78,7 +77,7 @@ with open(hmmer_ids_file) as fh:
 seq_domains = defaultdict(set)
 with open(iprscan_tsv) as fh:
     for line in fh:
-        cols = line.rstrip("\n").split("\t")
+        cols = line.rstrip("\\n").split("\\t")
         if len(cols) < 5:
             continue
         seq_id   = cols[0]
@@ -101,15 +100,15 @@ for sid in sorted(hmmer_ids):
     rows.append((sid, ";".join(sorted(found)) or "none", status))
 
 with open("confirmed_ids.txt", "w") as out:
-    out.write("\n".join(confirmed) + ("\n" if confirmed else ""))
+    out.write("\\n".join(confirmed) + ("\\n" if confirmed else ""))
 
 with open("rejected_ids.txt", "w") as out:
-    out.write("\n".join(rejected) + ("\n" if rejected else ""))
+    out.write("\\n".join(rejected) + ("\\n" if rejected else ""))
 
 with open("domain_confirmation_summary.tsv", "w") as out:
-    out.write("seq_id\tmatched_domains\tstatus\n")
+    out.write("seq_id\\tmatched_domains\\tstatus\\n")
     for r in rows:
-        out.write("\t".join(r) + "\n")
+        out.write("\\t".join(r) + "\\n")
 
 print(f"InterProScan: {len(confirmed)} confirmed, {len(rejected)} rejected",
       file=sys.stderr)
