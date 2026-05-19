@@ -99,19 +99,18 @@ process RBH_ORTHOLOGY {
 forward_blast   = '${forward_blast}'
 reverse_blast   = '${reverse_blast}'
 confirmed_ids   = '${confirmed_ids}'
-evalue_thresh   = float('${params.blast_evalue}')
-identity_thresh = float('${params.blast_identity}')
-coverage_thresh = float('${params.blast_coverage}')
+evalue_thresh   = float("${params.blast_evalue}")
+identity_thresh = float("${params.blast_identity}")
+coverage_thresh = float("${params.blast_coverage}")
 
 import sys
 from collections import defaultdict
 
 def parse_blast(filepath):
-    """Return dict: query_id -> best hit (highest bitscore) passing filters."""
     hits = defaultdict(list)
     with open(filepath) as fh:
         for line in fh:
-            cols = line.strip().split("\t")
+            cols = line.strip().split("\\t")
             if len(cols) < 9:
                 continue
             qid      = cols[0]
@@ -174,34 +173,34 @@ for seq_id in all_ids:
 
 with open("all_confirmed_ids.txt", "w") as out:
     for sid in all_ids:
-        out.write(sid + "\n")
+        out.write(sid + "\\n")
 
 with open("orthology_table.tsv", "w") as out:
-    out.write("seq_id\torthology_type\tbest_ref_hit\t"
-              "fwd_evalue\tfwd_pident\tfwd_qcovs\t"
-              "rev_evalue\trev_pident\n")
+    out.write("seq_id\\torthology_type\\tbest_ref_hit\\t"
+              "fwd_evalue\\tfwd_pident\\tfwd_qcovs\\t"
+              "rev_evalue\\trev_pident\\n")
     for row in orthology_rows:
-        out.write("\t".join(row) + "\n")
+        out.write("\\t".join(row) + "\\n")
 
 with open("rbh_pairs.tsv", "w") as out:
-    out.write("candidate\treference_hit\tfwd_evalue\tfwd_pident\t"
-              "fwd_qcovs\trev_evalue\trev_pident\n")
+    out.write("candidate\\treference_hit\\tfwd_evalue\\tfwd_pident\\t"
+              "fwd_qcovs\\trev_evalue\\trev_pident\\n")
     for row in rbh_pairs:
-        out.write("\t".join(str(x) for x in row) + "\n")
+        out.write("\\t".join(str(x) for x in row) + "\\n")
 
 type_counts = defaultdict(int)
 for row in orthology_rows:
     type_counts[row[1]] += 1
 
 with open("rbh_summary.txt", "w") as out:
-    out.write("RBH Orthology Assignment Summary\n")
-    out.write("=================================\n")
-    out.write(f"Total sequences (all pass downstream) : {len(all_ids)}\n")
-    out.write(f"  RBH orthologs                       : {type_counts['RBH_ORTHOLOG']}\n")
-    out.write(f"  Putative homologs (fwd hit only)    : {type_counts['PUTATIVE_HOMOLOG']}\n")
-    out.write(f"  No significant BLAST hit            : {type_counts['NO_BLAST_HIT']}\n")
-    out.write("\nNote: ALL sequences proceed to alignment/phylogenetics.\n")
-    out.write("Orthology assignments are annotations only.\n")
+    out.write("RBH Orthology Assignment Summary\\n")
+    out.write("=================================\\n")
+    out.write(f"Total sequences (all pass downstream) : {len(all_ids)}\\n")
+    out.write(f"  RBH orthologs                       : {type_counts['RBH_ORTHOLOG']}\\n")
+    out.write(f"  Putative homologs (fwd hit only)    : {type_counts['PUTATIVE_HOMOLOG']}\\n")
+    out.write(f"  No significant BLAST hit            : {type_counts['NO_BLAST_HIT']}\\n")
+    out.write("\\nNote: ALL sequences proceed to alignment/phylogenetics.\\n")
+    out.write("Orthology assignments are annotations only.\\n")
 
 print(f"Orthology: {type_counts['RBH_ORTHOLOG']} RBH, "
       f"{type_counts['PUTATIVE_HOMOLOG']} putative, "
